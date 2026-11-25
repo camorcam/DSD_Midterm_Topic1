@@ -1,0 +1,21 @@
+# 2025.2
+# Start time: 21:56:26 on Nov 25,2026
+# run -all
+# === apb_gpio random test: WAIT_STATES=2 SEED=1 transfers=4000 ===
+# --- coverage --------------------------------------------
+#  reg :  0    1    2    3    4    5    6    7
+#  rd  :  202  222  201  207  229  209  202  225
+#  wr  :  203    0  210  213  192  241  213    0
+#  strb:  20   9  13  16  20  20  24  25  23  16  19  23  24  14  22 984
+#  err read 308, err write 723, W1C that cleared a bit 205, irq rises 64, wait cycles 8000
+#  W1C writes overlapping a new event on the same bit: 25
+#  coverage holes: 0
+# --- 2005 reads, 1272 writes, 1031 error responses checked, 0 mismatches
+# *** STEP 5 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v(169)
+#    Time: 478710 ns  Iteration: 1  Instance: /tb_step5_apb_gpio_random
+# Break in Module tb_step5_apb_gpio_random at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v line 169
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v line 169
+#  quit -f
+# End time: 21:56:28 on Nov 25,2026, Elapsed time: 0:00:02
+# Errors: 0, Warnings: 0

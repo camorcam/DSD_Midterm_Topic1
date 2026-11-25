@@ -1,0 +1,14 @@
+# 2025.2
+# Start time: 21:56:21 on Nov 25,2026
+# vcd file capture.vcd
+#  vcd add -r /tb_apb_gpio_n32/*
+#  run -all
+# PASS: N=32 upper byte lanes, GPIO31 input, IRQ and byte-qualified W1C
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_apb_gpio_n32.sv(62)
+#    Time: 1411 ns  Iteration: 0  Instance: /tb_apb_gpio_n32
+# Break in Module tb_apb_gpio_n32 at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_apb_gpio_n32.sv line 62
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_apb_gpio_n32.sv line 62
+#  vcd flush
+#  quit -f
+# End time: 21:56:22 on Nov 25,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0

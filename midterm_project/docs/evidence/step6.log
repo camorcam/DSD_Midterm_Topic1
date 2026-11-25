@@ -1,0 +1,26 @@
+# 2025.2
+# Start time: 21:56:16 on Nov 25,2026
+# vcd file capture.vcd
+#  vcd add -r /tb_step6_system/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step6_system/#INITIAL#33 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step6_system.v Line: 34
+# [2050000]  ok  ID register read back correctly, configuration done
+# [4050000]  ok  switches 0A50 -> LEDs 0a50 (DATA_IN -> DATA_OUT over APB)
+# [10050000]  ok  button press (rising): irq_count=1
+# [16050000]  ok  button release (no fall): irq_count=1
+# [22050000]  ok  pin0 rising (both edges): irq_count=2
+# [28050000]  ok  pin0 falling (both edges): irq_count=3
+# [34050000]  ok  pin1 rising (fall only): irq_count=3
+# [40050000]  ok  pin1 falling (fall only): irq_count=4
+# [46050000]  ok  pin7 (no interrupt): irq_count=4
+# *** STEP 6 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step6_system.v(57)
+#    Time: 46050 ns  Iteration: 1  Instance: /tb_step6_system
+# Break in Module tb_step6_system at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step6_system.v line 57
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step6_system.v line 57
+#  vcd flush
+#  quit -f
+# End time: 21:56:16 on Nov 25,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1

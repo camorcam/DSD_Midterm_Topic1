@@ -1,0 +1,20 @@
+# 2025.2
+# Start time: 21:56:00 on Nov 25,2026
+# vcd file capture.vcd
+#  vcd add -r /tb_step1_basic/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step1_basic/#INITIAL#45 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step1_basic.v Line: 46
+# [71000] Test 1 rst_sync: reset released 2 clocks after the button
+# [11040000] Test 2 edges: rise 101/101  fall 99/99
+# [12610000] Test 3 debounce: 21 input bounces -> 2 clean changes
+# *** STEP 1 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step1_basic.v(88)
+#    Time: 12610 ns  Iteration: 1  Instance: /tb_step1_basic
+# Break in Module tb_step1_basic at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step1_basic.v line 88
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step1_basic.v line 88
+#  vcd flush
+#  quit -f
+# End time: 21:56:00 on Nov 25,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1

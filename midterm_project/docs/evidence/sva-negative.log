@@ -1,0 +1,8 @@
+# 2025.2
+# Start time: 21:55:42 on Nov 25,2026
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# run -all
+# === apb_gpio random test: WAIT_STATES=2 SEED=1 transfers=4000 ===
+# ** Error: APB R3: signals changed during a wait state
+#    Time: 150 ns Started: 130 ns  Scope: tb_step5_apb_gpio_random.u_sva.a_stable File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/apb_sva.sv Line: 29
+# ** Error: APB R3: signals changed during a wait state

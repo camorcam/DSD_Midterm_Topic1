@@ -1,0 +1,25 @@
+# 2025.2
+# Start time: 21:56:05 on Nov 25,2026
+# vcd file capture.vcd
+#  vcd add -r /tb_step3_gpio_irq/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step3_gpio_irq/#INITIAL#49 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step3_gpio_irq.v Line: 50
+# [100000] rise on pins 0..3: status=00000101 irq=1
+# [160000] fall on pins 0..3: status=00000111 irq=1
+# [220000] W1C bit 0: status=00000110 irq=1
+# [280000] W1C bits 2:1: status=00000000 irq=0
+# [360000] set wins over clear: status=00000001 irq=1
+# [460000] pin0 fall (rise only): status=00000000 irq=0
+# [520000] masked event: status=00000001 irq=0
+# [40640000] 2000 random cycles compared with the reference model
+# *** STEP 3 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step3_gpio_irq.v(90)
+#    Time: 40640 ns  Iteration: 1  Instance: /tb_step3_gpio_irq
+# Break in Module tb_step3_gpio_irq at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step3_gpio_irq.v line 90
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step3_gpio_irq.v line 90
+#  vcd flush
+#  quit -f
+# End time: 21:56:05 on Nov 25,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1

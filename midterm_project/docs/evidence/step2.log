@@ -1,0 +1,25 @@
+# 2025.2
+# Start time: 21:55:23 on Nov 25,2026
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# vcd file capture.vcd
+#  vcd add -r /tb_step2_byte_reg/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step2_byte_reg/#INITIAL#32 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step2_byte_reg.v Line: 33
+# [40000] reset value      q=00001234  (RESET_VAL & MASK)
+# [80000] write all bytes  q=0000ffff
+# [120000] write byte 0     q=0000ffa5
+# [160000] write byte 1     q=00005aa5
+# [200000] write bytes 3:2  q=00005aa5  (not implemented)
+# [240000] PSTRB = 0000     q=00005aa5  (no change)
+# [20320000] 500 random byte writes checked
+# *** STEP 2 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step2_byte_reg.v(56)
+#    Time: 20320 ns  Iteration: 1  Instance: /tb_step2_byte_reg
+# Break in Module tb_step2_byte_reg at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step2_byte_reg.v line 56
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step2_byte_reg.v line 56
+#  vcd flush
+#  quit -f
+# End time: 21:55:29 on Nov 25,2026, Elapsed time: 0:00:06
+# Errors: 0, Warnings: 2

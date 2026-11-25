@@ -8,18 +8,18 @@
 | Instructor | [Insert instructor name] |
 | Team members | [Insert both names and student IDs] |
 | Submission date | [Insert date] |
-| RTL revision | [Insert commit ID used for submission] |
-| FPGA target | Terasic DE10-Standard, planned |
+| RTL commit | `5b376be` for the hardware and tutorial RTL. The FPGA project is `Mid_dsd`. |
+| FPGA target | Terasic DE10-Standard |
 
 ## Abstract
 
-This project implements a GPIO peripheral with an AMBA APB4 slave interface, a 32-bit register bank, configurable edge interrupts and write-one-to-clear interrupt status. The GPIO width is configurable from 1 to 32 pins. A demonstration sequencer uses an APB master to transfer switch values to LEDs and service pending interrupts. Six simulation stages passed in Icarus Verilog, including directed register tests, a system demonstration and 15 constrained-random runs across five seeds and three wait-state settings. The random scoreboard reported zero mismatches in those 15 runs and detected 14 mismatches when the interrupt clear priority was deliberately reversed. System-level simulation used 16 GPIO pins. SVA execution and FPGA validation are pending.
+This project implements a GPIO peripheral with an AMBA APB4 slave interface, a 32-bit register bank, configurable edge interrupts and write-one-to-clear interrupt status. The GPIO width is configurable from 1 to 32 pins. A demonstration sequencer uses an APB master to transfer switch values to LEDs and service pending interrupts. Six simulation stages passed in Icarus Verilog, including directed register tests, a system demonstration and 15 constrained-random runs across five seeds and three wait-state settings. The random scoreboard reported zero mismatches in those 15 runs and detected 14 mismatches when the interrupt clear priority was deliberately reversed. System-level simulation used 16 GPIO pins. A Questa run passed the APB assertions and detected an injected request-stability violation. A separate 32-pin directed test passed. The Quartus project, `Mid_dsd`, builds the separate DE10-Standard demonstration and provides its fitter, TimeQuest and programming artifacts.
 
 ## 1. Introduction and Requirements
 
 Topic 1 requires a GPIO peripheral with a documented 32-bit register interface. Software reads synchronized GPIO inputs, writes output values, configures per-pin direction and selects which rising or falling edges generate interrupt events. Software reads pending status and clears selected bits with a write-one-to-clear (W1C) operation. The APB slave supports byte strobes and responds with `PSLVERR` to unmapped accesses.
 
-The project includes the peripheral and a simulation of the intended hardware demonstration. The simulated master reads the switch inputs through APB and writes the value back to the output register. It also handles interrupt requests by reading the status register and acknowledging pending events. The full FPGA deliverable is described in Section 6.
+The project includes a tutorial system for protocol verification and a DE10-Standard implementation for the FPGA demo. In the tutorial system, the APB master reads switch inputs, writes them to the output register and services interrupts. Section 6 describes the register map and behavior of the FPGA implementation.
 
 | Topic 1 requirement | RTL implementation | Simulation evidence |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ The project includes the peripheral and a simulation of the intended hardware de
 | Sticky status with W1C | `gpio_irq` and the slave clear mask | Steps 3–5 |
 | Byte-lane writes | `byte_reg` and `PSTRB` | Steps 2, 4 and 5 |
 | Error response for illegal accesses | Address decoder in `apb_gpio` | Steps 4 and 5 |
-| Switches, LEDs and interrupt service through APB | `gpio_system` | Step 6 system simulation, hardware demo pending |
+| Switches, LEDs and interrupt service through APB | `gpio_system` | Step 6 system simulation and FPGA demo results in Section 6. |
 
 ## 2. APB4 Protocol
 
@@ -56,7 +56,9 @@ For two wait states, the slave keeps `PREADY` low in the first two ACCESS cycles
 | ACCESS, second wait | 1 | 1 | 0 | The master continues holding the request. |
 | ACCESS, completion | 1 | 1 | 1 | A legal write commits, or read data and error status are sampled. |
 
-*[Figure 1 pending — annotated APB read and write timing from `../sim/step4_ws2.vcd`. Mark clock edges, SETUP, both wait cycles and the completion edge. Label `PADDR`, `PWRITE`, `PWDATA`, `PSTRB`, `PRDATA` and `PSLVERR` where applicable.]*
+![Annotated APB4 read and write with two wait states](evidence/step4-waveform.png)
+
+*Figure 1. APB4 write and read through two wait states, captured from the Step 4 Questa simulation.*
 
 ## 3. Architecture and Register Map
 
@@ -155,7 +157,7 @@ This update preserves a new event when software clears the same bit in the same 
 
 ### 4.3 Verification bug hunt
 
-An isolated copy of `gpio_irq.v` was changed to apply the clear mask after adding new events. For wait state 0 and seed 1, the scoreboard recorded 14 incorrect reads of `INT_STATUS`. The first mismatch showed `0x00002596` with `0x00002796` expected. The submitted RTL keeps the set-over-clear equation. The corresponding regression with the submitted RTL reported zero mismatches. [Bug-hunt log](../logs/bug_hunt/step5_clear_priority.log) · [Baseline log](../logs/step5_ws0_seed1.log)
+The fault-injection experiment applied the clear mask after adding new events in `gpio_irq.v`. For wait state 0 and seed 1, the scoreboard recorded 14 incorrect reads of `INT_STATUS`. The first mismatch showed `0x00002596` with `0x00002796` expected. The set-over-clear implementation reported zero mismatches with the same test settings.
 
 ## 5. Verification Methodology and Results
 
@@ -202,44 +204,70 @@ Each row represents 4,000 generated APB transfers and a passing test. Error colu
 | 2 | 42 | 301 | 706 | 8000 | 18 | 0 | 0 |
 | 2 | 2026 | 318 | 717 | 8000 | 19 | 0 | 0 |
 
-Per-register read/write counts and all 16 byte strobe bins are in the individual simulation logs. [Sample coverage log for two wait states and seed 1](../logs/step5_ws2_seed1.log)
+The [Questa Step 5 log](evidence/step5.log) shows per-register counts and all 16 byte-strobe bins for two wait states and seed 1. Questa and Icarus use different random streams.
 
 ### 5.4 Protocol assertions and scope
 
-The Step 5 testbench can instantiate the SVA checker, which checks SETUP-to-ACCESS sequencing, request stability during waits, read strobes and the valid error window. The additional assertion checks that `PADDR` remains stable between SETUP and ACCESS. **Execution status** is pending on Verilator or Questa. [Pending — add simulator version, normal SVA result and the failing assertion and timestamp from the intentional BFM violation.]
+Questa Altera Starter FPGA Edition 2025.2 ran Step 5 with `WS=2`, seed 1 and assertions enabled. The normal run passed 4,000 transfers. With `BFM_BUG` enabled, assertion `a_stable` reported `APB R3: signals changed during a wait state` at **150 ns**, starting from the sample at 130 ns. See the [normal run](evidence/sva-normal.log) and the [first assertion failure](evidence/sva-negative.log).
 
-Steps 4–6 used a 16-pin GPIO instance with a 32-bit bus and register interface. [Pending — add a directed `N=32` run that checks the upper byte lanes and exercises interrupts on an upper GPIO pin.]
+Steps 4–6 use a 16-pin GPIO instance. A separate directed Step 4 test instantiated the tutorial peripheral at `N=32` and `WS=2`. It verified independent writes to byte lanes 2 and 3, synchronized input on GPIO31, IRQ assertion, and byte-qualified W1C. Writing the GPIO31 mask with lane 2 enabled left the interrupt pending. Writing it with lane 3 enabled cleared the status and deasserted IRQ. See the [testbench](../tb/tb_apb_gpio_n32.sv), [run log](evidence/n32-directed.log), and [GPIO31 waveform](evidence/n32-directed-waveform.png).
 
 ### 5.5 Waveform evidence
 
-| Figure | Input | Annotation to add |
+The annotated waveforms were rendered from Questa VCD captures. All six steps passed. Steps 4 and 5 used two wait states.
+
+| Step | Waveform and observation | Run log |
 | --- | --- | --- |
-| [Pending] Step 1 | `../sim/step1.vcd` | Mark reset release and the two sampling stages before synchronized input changes. |
-| [Pending] Step 2 | `../sim/step2.vcd` | Mark an enabled byte write and the unchanged adjacent byte. |
-| [Pending] Step 3 | `../sim/step3.vcd` | Mark a rising event coinciding with W1C and show that the pending bit remains set. |
-| [Pending] Step 4 | `../sim/step4_ws2.vcd` | Use Figure 1 to show the request signals held through the two wait cycles. |
-| [Pending] Step 5 | `../sim/step5.vcd` | Mark a random legal transfer, an error response and a wait cycle. |
-| [Pending] Step 6 | `../sim/step6.vcd` | Mark IRQ assertion, the `INT_STATUS` read and W1C write at `0x18`, and the counter increment. |
+| 1 | [Reset release and the two-stage input synchronizer](evidence/step1-waveform.png) | [Step 1](evidence/step1.log) |
+| 2 | [Byte 0 and byte 1 writes preserve the neighboring byte](evidence/step2-waveform.png) | [Step 2](evidence/step2.log) |
+| 3 | [A new GPIO event wins when it coincides with W1C](evidence/step3-waveform.png) | [Step 3](evidence/step3.log) |
+| 4 | [Figure 1 shows APB SETUP, waits and transfer completion](evidence/step4-waveform.png) | [Step 4](evidence/step4.log) |
+| 5 | [A legal transfer and an error response with two wait states](evidence/step5-waveform.png) | [Step 5](evidence/step5.log) |
+| 6 | [IRQ assertion, `INT_STATUS` read and W1C at `0x18`, and service count increment](evidence/step6-waveform.png) | [Step 6](evidence/step6.log) |
 
 ## 6. FPGA Implementation and Hardware Results
 
-The planned board is the Terasic DE10-Standard. The intended demonstration uses switches as input, LEDs as output, a push button to trigger an interrupt and an indication that the interrupt was serviced. The final board integration needs to use the same peripheral revision and register map verified in Sections 3–5. The existing Quartus configuration targets a DE10-Standard wrapper with a separate register map. The hardware results below apply to the planned tutorial-aligned build after board integration.
+### 6.1 Quartus project and hardware architecture
+
+Open [`Mid_dsd.qpf`](../../Mid_dsd.qpf). The [`Mid_dsd.qsf`](../../Mid_dsd.qsf) selects `de10_standard_top`, the Cyclone V `5CSXFC6D6F31C6` and ten Verilog source files in `midterm_project/rtl`. Its RTL and SDC match the files at commit `5b376be`. The QSF references these files through `../T1_APB_GPIO_project/`, which resolves from the current repository directory. A checkout with a different directory name needs those source and SDC references adjusted.
+
+`de10_standard_top` maps the DE10-Standard connectors into `fpga_top`. The latter connects `reset_sync` and `button_debounce` to the fixed transaction sequencer `apb_master_demo` and the 32-bit `apb_gpio_top`. The peripheral contains `apb_slave_ctrl`, `gpio_registers`, `gpio_input_sync` and `gpio_interrupt`. The slave ties `PREADY` high for zero wait states. The interrupt block detects eligible edges on input-configured pins, retains a new event that coincides with a clear, and gates the combined IRQ with `INT_ENABLE`.
+
+| Offset | `Mid_dsd` register | Access | Tutorial equivalent if different |
+| --- | --- | --- | --- |
+| `0x00` | `DATA_OUT` | RW | Same offset |
+| `0x04` | `DATA_IN` | RO | Same offset |
+| `0x08` | `DIRECTION` | RW | Same offset |
+| `0x0C` | `INT_ENABLE` | RW | Same offset |
+| `0x10` | `INT_STATUS` | RW1C | `INT_STATUS` at `0x18` |
+| `0x14` | `INT_RISE_ENABLE` | RW | `INT_RISE` at `0x10` |
+| `0x18` | `INT_FALL_ENABLE` | RW | `INT_FALL` at `0x14` |
+| `0x1C` | Unmapped | Error | `ID` at `0x1C` |
+
+The hardware master holds `PSTRB=4'hF` during reads and writes. Its slave accepts those reads. The tutorial's read-strobe assertion in Section 5.4 applies to the tutorial master and slave.
+
+### 6.2 Board demo and verification
+
+- `KEY[0]` is the active-low reset. `KEY[1]` is inverted and debounced before entering GPIO bit 8. The hardware default is 500,000 stable cycles, or 10 ms at 50 MHz.
+- `SW[7:0]` enter GPIO bits 7:0 and `SW[9:8]` enter bits 10:9. The demo reads and captures `DATA_IN` internally once during startup. The LEDs display the programmed output pattern.
+- The master configures GPIO bits 7:0 as outputs, writes `0x55` followed by `0xAA`, enables the rising-edge interrupt on GPIO8 and waits for a button press. It reads `INT_STATUS` at `0x10`, writes `0x00000100` back for W1C, then enters its done state until reset.
+- `LEDR[7:0]` shows the GPIO output, `LEDR[8]` shows IRQ, and `LEDR[9]` shows completion without a recorded APB error. `KEY[3:2]` are reserved.
+- Questa 2025.2 compiled the ten QSF-listed RTL files plus [`tb_de10_standard_top.sv`](../tb/tb_de10_standard_top.sv). At **574 ns**, the test passed all six checks covering active-low reset, idle LED output, switch capture `0x000004A5`, completion with IRQ cleared, interrupt capture `0x00000100`, and reset after completion. The testbench uses a three-cycle debounce setting to shorten simulation.
+
+### 6.3 Quartus build and physical evidence
 
 | Item | Result or evidence |
 | --- | --- |
-| FPGA and toolchain | Terasic DE10-Standard, planned. [Pending — board revision, Quartus version and final RTL revision.] |
-| Pin mapping and clock | Existing constraints target `CLOCK_50` at 50 MHz. [Pending — verify switch, key and LED pins, I/O standards and clock constraint for the final wrapper.] |
-| Synthesis and fit | [Pending — Quartus compilation report and resource counts for logic, registers and memory blocks.] |
-| Timing | [Pending — setup and hold slack at the demo clock, Fmax and timing report excerpt.] |
-| Programming | [Pending — final programming file and programming result.] |
-| SignalTap | [Pending — annotate one APB transaction with address, data, `PSEL`, `PENABLE` and `PREADY`. Capture interrupt service if available.] |
-| Physical demo | [Pending — switch-to-LED observation, button and interrupt behavior, reset check, and photo or video.] |
-
-Planned acceptance checks are to reset the board to a known state, show that switch changes reach the LEDs through APB and observe interrupt behavior on a button press. [Pending — add observed results for each check.]
+| FPGA and toolchain | Terasic DE10-Standard, Cyclone V `5CSXFC6D6F31C6`. Quartus Prime Lite 25.1std.0 Build 1129. The build completed on 25 November 2026 at 21:01:30. [Compilation flow](../../output_files/Mid_dsd.flow.rpt) |
+| Pin mapping and clock | All 25 final fitted pins match the plain node-name assignments and use `3.3-V LVTTL`. Examples are `CLOCK_50 = AF14`, `KEY[0] = AJ4`, `SW[0] = AB30`, and `LEDR[0] = AA24`. The SDC sets a 20 ns clock and excludes external arrival timing on asynchronous `KEY` and `SW` inputs. [Fitter pin report](../../output_files/Mid_dsd.pin) ? [SDC](../quartus/de10_standard_apb_gpio.sdc) |
+| Synthesis and fit | Full compilation completed successfully. The fitter used **40 ALMs, 108 registers, 25 pins and 0 RAM blocks**. Synthesis reported **0 errors and 61 warnings**, including repeated diagnostics for duplicate assignments whose braced node names Quartus ignored. The corresponding plain assignments are present and their fitted values were checked against the pin report. [Synthesis report](../../output_files/Mid_dsd.map.rpt) ? [Fitter summary](../../output_files/Mid_dsd.fit.summary) |
+| Timing | Worst reported setup slack **+16.345 ns** and hold slack **+0.141 ns** at 50 MHz, with zero TNS for the reported clock checks. The slow 85 ?C model reports **273.60 MHz** Fmax. TimeQuest lists ten unconstrained LED output ports, so these values describe the reported clock checks. [Timing summary](../../output_files/Mid_dsd.sta.summary) ? [TimeQuest report](../../output_files/Mid_dsd.sta.rpt) |
+| Programming | The build generated [`Mid_dsd.sof`](../../output_files/Mid_dsd.sof). The exact file loaded during the physical demonstration and the board revision are unverified. |
+| Physical demo | The board demonstration photos show `0xAA` on `LEDR[7:0]` and `LEDR[8]` (IRQ) and `LEDR[9]` (done) illuminated during a `KEY[1]` press. The board-level simulation verifies switch readback and reset. Physical reset and SignalTap capture are unverified. |
 
 ## 7. Conclusion
 
-The APB4 GPIO peripheral and its demonstration sequencer passed the six-stage simulation regression. Directed tests exercised reset, register access, byte strobes, error responses and interrupt handling. All 15 random configurations passed with zero scoreboard mismatches and zero reported coverage holes. An isolated interrupt-priority fault produced 14 mismatches, showing that the scoreboard can detect loss of a simultaneous event. The remaining evidence covers the 32-pin configuration, the SVA run, FPGA timing and resource use, and operation on the physical board.
+The tutorial APB4 peripheral passed all six simulation stages and 15 constrained-random configurations. The directed 32-pin test verified GPIO31 interrupt handling and upper-byte strobes, and the Questa assertion caught the injected APB violation. The separate `Mid_dsd` board implementation passed its six-check board simulation. The Quartus reports verify the resource usage, fitted pins and positive setup and hold slack for the 50 MHz clock. The hardware demo photos show the expected LED response to the interrupt. The programmed image and on-chip APB timing are unverified.
 
 ## References and Contributions
 

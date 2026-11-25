@@ -1,0 +1,53 @@
+# 2025.2
+# Start time: 21:56:11 on Nov 25,2026
+# vcd file capture.vcd
+#  vcd add -r /tb_step4_apb_gpio/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step4_apb_gpio/#INITIAL#54 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step4_apb_gpio.v Line: 55
+# === apb_gpio directed test, WAIT_STATES = 2 ===
+# --- T1 reset values
+# [131000]  ok  rd DATA_OUT     @000 = 00000000 err=0
+# [231000]  ok  rd DIR          @008 = 00000000 err=0
+# [331000]  ok  rd INT_ENABLE   @00c = 00000000 err=0
+# [431000]  ok  rd INT_RISE     @010 = 00000000 err=0
+# [531000]  ok  rd INT_FALL     @014 = 00000000 err=0
+# [631000]  ok  rd INT_STATUS   @018 = 00000000 err=0
+# [731000]  ok  rd ID           @01c = 47504901 err=0
+# --- T2 read/write every RW register (unimplemented bits read 0)
+# [931000]  ok  rd DATA_OUT     @000 = 0000ffff err=0
+# [1131000]  ok  rd DIR          @008 = 0000a5c3 err=0
+# [1331000]  ok  rd INT_ENABLE   @00c = 00005555 err=0
+# [1531000]  ok  rd INT_RISE     @010 = 0000aaaa err=0
+# [1731000]  ok  rd INT_FALL     @014 = 00000f0f err=0
+# [1731000]  ok  pins gpio_out=ffff gpio_oe=a5c3
+# --- T3 byte strobes
+# [2031000]  ok  rd DATA_OUT b0  @000 = 00000034 err=0
+# [2231000]  ok  rd DATA_OUT b1  @000 = 00005634 err=0
+# [2431000]  ok  rd DATA_OUT none @000 = 00005634 err=0
+# --- T4 DATA_IN through the synchronizer
+# [2591000]  ok  rd DATA_IN      @004 = 0000beef err=0
+# --- T5 interrupts: pin0 rising, pin1 falling, pin2 both
+# [3471000]  ok  rd INT_STATUS   @018 = 00000000 err=0
+# [3651000]  ok  rd INT_STATUS   @018 = 00000007 err=0
+# [3851000]  ok  rd after W1C b0 @018 = 00000006 err=0
+# [4051000]  ok  rd W1C PSTRB=0  @018 = 00000006 err=0
+# [4251000]  ok  rd after W1C all @018 = 00000000 err=0
+# [4431000]  ok  rd pin2 fall    @018 = 00000004 err=0
+# --- T6 error responses (PSLVERR)
+# [4631000]  ok  rd unmapped 0x20 @020 = 00000000 err=1
+# [4731000]  ok  rd unmapped 0xFFC @ffc = 00000000 err=1
+# [4831000]  ok  rd unaligned 0x02 @002 = 00000000 err=1
+# [5331000]  ok  rd DATA_OUT kept @000 = 00005634 err=0
+# [5431000]  ok  rd ID kept      @01c = 47504901 err=0
+# === 51 transfers, 0 error(s) ===
+# *** STEP 4 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step4_apb_gpio.v(118)
+#    Time: 5431 ns  Iteration: 0  Instance: /tb_step4_apb_gpio
+# Break in Module tb_step4_apb_gpio at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step4_apb_gpio.v line 118
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step4_apb_gpio.v line 118
+#  vcd flush
+#  quit -f
+# End time: 21:56:11 on Nov 25,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1

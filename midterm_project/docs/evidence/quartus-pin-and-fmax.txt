@@ -1,0 +1,32 @@
+Matched all 25 assigned pin locations and 3.3-V LVTTL I/O standards against the Quartus fitter pin report.
+
+CLOCK_50                     : AF14      : input  : 3.3-V LVTTL       :         : 3B        : Y              
+KEY[0]                       : AJ4       : input  : 3.3-V LVTTL       :         : 3B        : Y              
+KEY[1]                       : AK4       : input  : 3.3-V LVTTL       :         : 3B        : Y              
+KEY[2]                       : AA14      : input  : 3.3-V LVTTL       :         : 3B        : Y              
+KEY[3]                       : AA15      : input  : 3.3-V LVTTL       :         : 3B        : Y              
+SW[0]                        : AB30      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[1]                        : Y27       : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[2]                        : AB28      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[3]                        : AC30      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[4]                        : W25       : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[5]                        : V25       : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[6]                        : AC28      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[7]                        : AD30      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[8]                        : AC29      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+SW[9]                        : AA30      : input  : 3.3-V LVTTL       :         : 5B        : Y              
+LEDR[0]                      : AA24      : output : 3.3-V LVTTL       :         : 5A        : Y              
+LEDR[1]                      : AB23      : output : 3.3-V LVTTL       :         : 5A        : Y              
+LEDR[2]                      : AC23      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[3]                      : AD24      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[4]                      : AG25      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[5]                      : AF25      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[6]                      : AE24      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[7]                      : AF24      : output : 3.3-V LVTTL       :         : 4A        : Y              
+LEDR[8]                      : AB22      : output : 3.3-V LVTTL       :         : 5A        : Y              
+LEDR[9]                      : AC22      : output : 3.3-V LVTTL       :         : 4A        : Y              
+
+CLOCK_50 Fmax excerpts from the TimeQuest report
+; CLOCK_50   ; Base ; 20.000 ; 50.0 MHz  ; 0.000 ; 10.000 ;            ;           ;             ;       ;        ;           ;            ;          ;        ;        ; { CLOCK_50 } ;
+; 273.6 MHz ; 273.6 MHz       ; CLOCK_50   ;      ;
+; 282.81 MHz ; 282.81 MHz      ; CLOCK_50   ;      ;

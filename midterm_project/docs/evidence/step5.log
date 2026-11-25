@@ -1,0 +1,28 @@
+# 2025.2
+# Start time: 21:55:33 on Nov 25,2026
+# ** Warning: (vopt-10908) Some optimizations are turned off because the +acc switch is in effect.
+# vcd file capture.vcd
+#  vcd add -r /tb_step5_apb_gpio_random/*
+#  run -all
+# ** Warning: (vsim-PLI-3110) $dumpfile : This task can be called only once. Please use $fdumpfile()
+# for multiple files.
+#    Time: 0 ps  Iteration: 0  Process: /tb_step5_apb_gpio_random/#INITIAL#118 File: D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v Line: 119
+# === apb_gpio random test: WAIT_STATES=2 SEED=1 transfers=4000 ===
+# --- coverage --------------------------------------------
+#  reg :  0    1    2    3    4    5    6    7
+#  rd  :  202  222  201  207  229  209  202  225
+#  wr  :  203    0  210  213  192  241  213    0
+#  strb:  20   9  13  16  20  20  24  25  23  16  19  23  24  14  22 984
+#  err read 308, err write 723, W1C that cleared a bit 205, irq rises 64, wait cycles 8000
+#  W1C writes overlapping a new event on the same bit: 25
+#  coverage holes: 0
+# --- 2005 reads, 1272 writes, 1031 error responses checked, 0 mismatches
+# *** STEP 5 PASS ***
+# ** Note: $finish    : D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v(169)
+#    Time: 478710 ns  Iteration: 1  Instance: /tb_step5_apb_gpio_random
+# Break in Module tb_step5_apb_gpio_random at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v line 169
+# Stopped at D:/T1_APB_GPIO_project/.verify-d5/midterm_project/tb/tb_step5_apb_gpio_random.v line 169
+#  vcd flush
+#  quit -f
+# End time: 21:55:39 on Nov 25,2026, Elapsed time: 0:00:06
+# Errors: 0, Warnings: 2
