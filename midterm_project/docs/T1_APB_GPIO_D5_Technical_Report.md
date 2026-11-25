@@ -262,12 +262,36 @@ The hardware master holds `PSTRB=4'hF` during reads and writes. Its slave accept
 | Pin mapping and clock | All 25 final fitted pins match the plain node-name assignments and use `3.3-V LVTTL`. Examples are `CLOCK_50 = AF14`, `KEY[0] = AJ4`, `SW[0] = AB30`, and `LEDR[0] = AA24`. The SDC sets a 20 ns clock and excludes external arrival timing on asynchronous `KEY` and `SW` inputs. [Fitter pin report](../../output_files/Mid_dsd.pin) ? [SDC](../quartus/de10_standard_apb_gpio.sdc) |
 | Synthesis and fit | Full compilation completed successfully. The fitter used **40 ALMs, 108 registers, 25 pins and 0 RAM blocks**. Synthesis reported **0 errors and 61 warnings**, including repeated diagnostics for duplicate assignments whose braced node names Quartus ignored. The corresponding plain assignments are present and their fitted values were checked against the pin report. [Synthesis report](../../output_files/Mid_dsd.map.rpt) ? [Fitter summary](../../output_files/Mid_dsd.fit.summary) |
 | Timing | Worst reported setup slack **+16.345 ns** and hold slack **+0.141 ns** at 50 MHz, with zero TNS for the reported clock checks. The slow 85 ?C model reports **273.60 MHz** Fmax. TimeQuest lists ten unconstrained LED output ports, so these values describe the reported clock checks. [Timing summary](../../output_files/Mid_dsd.sta.summary) ? [TimeQuest report](../../output_files/Mid_dsd.sta.rpt) |
-| Programming | The build generated [`Mid_dsd.sof`](../../output_files/Mid_dsd.sof). The exact file loaded during the physical demonstration and the board revision are unverified. |
-| Physical demo | The board demonstration photos show `0xAA` on `LEDR[7:0]` and `LEDR[8]` (IRQ) and `LEDR[9]` (done) illuminated during a `KEY[1]` press. The board-level simulation verifies switch readback and reset. Physical reset and SignalTap capture are unverified. |
+| Programming | Quartus Programmer loaded [`Mid_dsd.sof`](../../output_files/Mid_dsd.sof), checksum `00B09F48`, over JTAG using `DE-SoC [USB-1]`. Programming reached **100% (Successful)**, as shown in Figure 7. The board revision is unverified. |
+| Physical demo | Figures 2–4 show the `0xAA` output pattern, a `KEY[1]` press with the IRQ and completion indicators illuminated, and the completion indicator remaining on with IRQ off. The board-level simulation verifies switch readback and reset. Physical reset and SignalTap capture are unverified. |
+
+![DE10-Standard displaying 0xAA with IRQ and completion LEDs off](evidence/fpga_demo_1.jpg)
+
+*Figure 2. Before the button press, `LEDR[7:0]` displays `0xAA`. The IRQ and completion indicators are both off.*
+
+![DE10-Standard during a KEY1 press with IRQ and completion LEDs illuminated](evidence/fpga_demo_3.jpg)
+
+*Figure 3. During the `KEY[1]` press, `LEDR[8]` (IRQ) and `LEDR[9]` (completion) appear illuminated. The output pattern remains `0xAA`.*
+
+![DE10-Standard with IRQ off and the completion LED illuminated](evidence/fpga_demo_2.jpg)
+
+*Figure 4. After interrupt service, `LEDR[8]` is off and `LEDR[9]` remains on. The output pattern remains `0xAA`.*
+
+![Quartus Pin Planner showing LED and switch assignments for Mid_dsd](evidence/pin_planner.png)
+
+*Figure 5. Quartus Pin Planner shows matching assigned and fitted locations for the displayed LED and switch signals, with a 3.3-V LVTTL I/O standard.*
+
+![Successful Mid_dsd compilation in Quartus Prime Lite](evidence/quartus_compile.png)
+
+*Figure 6. Quartus completed the full compilation with 0 errors and 94 warnings. The flow summary reports 40 ALMs, 108 registers and 25 pins.*
+
+![Quartus Programmer showing successful JTAG programming of Mid_dsd.sof](evidence/quartus_programmer.png)
+
+*Figure 7. Quartus Programmer shows successful JTAG programming of `Mid_dsd.sof` on the Cyclone V FPGA.*
 
 ## 7. Conclusion
 
-The tutorial APB4 peripheral passed all six simulation stages and 15 constrained-random configurations. The directed 32-pin test verified GPIO31 interrupt handling and upper-byte strobes, and the Questa assertion caught the injected APB violation. The separate `Mid_dsd` board implementation passed its six-check board simulation. The Quartus reports verify the resource usage, fitted pins and positive setup and hold slack for the 50 MHz clock. The hardware demo photos show the expected LED response to the interrupt. The programmed image and on-chip APB timing are unverified.
+The tutorial APB4 peripheral passed all six simulation stages and 15 constrained-random configurations. The directed 32-pin test verified GPIO31 interrupt handling and upper-byte strobes, and the Questa assertion caught the injected APB violation. The separate `Mid_dsd` board implementation passed its six-check board simulation. The Quartus reports verify the resource usage, fitted pins and positive setup and hold slack for the 50 MHz clock. Quartus Programmer recorded successful JTAG programming of `Mid_dsd.sof`, and the hardware demo photos show the expected LED response to the interrupt. On-chip APB timing is unverified.
 
 ## References and Contributions
 
@@ -284,4 +308,63 @@ The course's Topic 1 student package supplied the starter RTL, testbench and sim
 
 ## Appendix A. Tutorial Discussion Questions
 
-[Pending — answer the end-of-step questions from the Topic 1 tutorial. Cross-reference Sections 2–5 where an answer is already covered. Complete the board-related answers after the hardware demo.]
+### A.1 Synchronization, reset and debounce
+
+1. **Why use two synchronizer flip-flops?** The first stage can become metastable when an asynchronous input changes near the sampling edge. The second stage samples it one clock later, giving it time to settle and reducing the chance that metastability reaches the logic. A third stage adds another cycle of settling time when the required mean time between failures justifies the extra latency.
+2. **How long does a pin change take to produce `rise`?** The next sampling edge captures the pin in `meta`, and the following edge transfers it to `q_sync`. The combinational edge detector asserts `rise` when `q_sync` becomes high while its saved value is low. The nominal delay is about **one to two clock periods** from an asynchronous transition, depending on its phase relative to the clock. A downstream register samples that pulse on the following edge.
+3. **What happens to a pulse shorter than one clock?** It can fall between sampling edges and be missed. A held push-button press lasts much longer than a 20 ns clock period, though individual bounce pulses can be missed. A 10 MHz square wave has 50 ns high and low phases at 50% duty cycle, so a 50 MHz sampler can observe both. A 10 MHz pulse train with high or low intervals shorter than 20 ns can still lose transitions.
+4. **Why assert reset asynchronously and release it synchronously?** Assertion resets the circuit immediately, even when the clock is absent. The reset synchronizer releases reset on a clock edge, reducing the risk of recovery/removal violations and logic leaving reset inconsistently.
+5. **What counter implements 10 ms debounce at 50 MHz?** `STABLE = 50,000,000 × 0.010 = 500,000` cycles. The counter must represent `STABLE - 1 = 499,999`, so the minimum `CW` is **19 bits**. The board wrapper uses 20 bits.
+
+### A.2 Byte-strobed registers
+
+1. **What does a write with `PSTRB=0000` do?** A write to a valid writable register completes without modifying any byte. This lets a master issue a masked write whose byte-enable mask selects no lanes. Address and access checks still apply.
+2. **How many flip-flops does `MASK=32'h0000FFFF` need?** **16** for the implemented low bits. The upper 16 bits are zero after reset and on every write, so synthesis can replace their storage with constants.
+3. **Why apply the mask to the reset value?** `RESET_VAL & MASK` initializes the implemented bits to their specified defaults and forces the unimplemented bits to zero from reset onward.
+
+### A.3 Edge interrupts and W1C
+
+1. **How can clear priority lose an interrupt?** At clock N, a status read completes and returns a pending bit. At N+1, the slave samples the W1C request in SETUP. With zero wait states, the write completes at N+2, on the same edge that the interrupt register samples a new event for that bit. Clear priority produces `(1 | 1) & ~1 = 0`, losing the new event. Set priority produces `(1 & ~1) | 1 = 1`, leaving it pending for service.
+2. **Why record events while `INT_ENABLE=0`?** Software can mask the IRQ line temporarily and still poll the sticky status to discover which configured events occurred. Enabling a bit with pending status can assert IRQ immediately.
+3. **What happens if a pin is already high at reset release?** When the synchronizer fills, the edge detector can see a 0-to-1 transition. The rise and fall enables reset to zero, so this transition produces no pending event under default configuration. A driver can keep IRQ masked, allow the synchronizer to settle, configure the desired edges, clear stale status, and then enable IRQ.
+4. **Is `irq` glitch-free?** The reduction OR is combinational. If pending bits and enables change together, propagation delays can cause a transient even though its inputs come from registers. A same-clock interrupt consumer can sample the settled level subject to normal timing constraints. An asynchronous consumer needs a suitable registered and synchronized interrupt interface.
+
+### A.4 APB slave timing
+
+1. **Why commit a write at the completing ACCESS edge?** SETUP presents the request, and ACCESS can stall. Updating only when `PSEL && PENABLE && PREADY && PWRITE` is true and the request is valid commits it exactly once, even when ACCESS spans several cycles.
+2. **What is the read timing path?** From the master address registers, the path goes through the APB address wiring, slave decode and read-data multiplexer, then through `PRDATA` to the master capture registers. The clock period must cover launch, propagation and capture setup. If the path is too slow, optimize the decode or pipeline the response and extend ACCESS with `PREADY=0` until the data is valid.
+3. **What is the write throughput?** SETUP plus ACCESS takes **2 clocks** at `WS=0` and **4 clocks** at `WS=2`. A master issuing a new SETUP immediately after each completion can reach **25 million** and **12.5 million** writes per second at 50 MHz. With the supplied task BFM, the next request waits for another rising edge after the task returns. With zero randomized idle delay, successive SETUPs are **3** and **5** clocks apart, yielding about **16.67 million** and **10 million** writes per second.
+4. **What are the trade-offs for writes to read-only registers?** Ignoring the write can support drivers that write a common register block containing read-only fields. Reporting `PSLVERR` exposes incorrect addresses or write permissions immediately. The tutorial slave reports the error.
+
+### A.5 Scoreboard, coverage and assertions
+
+1. **Why use pre-edge values in the scoreboard?** RTL flip-flops sample the inputs and old state at the clock edge, then nonblocking assignments update the state. Using post-edge synchronizer or status values can apply an event one cycle early or compare a transfer against state modified by that same edge. The reference model uses the sampled pre-edge inputs to compute the expected next state.
+2. **Why require wait-state coverage only at `WS>0`?** The wait bin requires `PSEL && PENABLE && !PREADY`. At `WS=0` this is unreachable. Testing several parameter values covers both immediate completion and the wait behavior without treating an impossible bin as a failure.
+3. **Which rules check each side?** **R1–R5** check the master: selection during ACCESS, SETUP-to-ACCESS sequencing, stability during waits, dropping `PENABLE` after completion, and zero strobes on reads. **R6–R7** check the slave: known response signals at the applicable sample points and `PSLVERR` only during completing ACCESS. Checking the BFM separates invalid stimulus from a slave fault. The injected BFM fault triggered R3 at **150 ns**.
+
+### A.6 System sequencer and interrupt service
+
+1. **How can clearing all bits lose an event?**
+
+   | Time | Event | Pending status |
+   | --- | --- | --- |
+   | Read completion | The sequencer reads bit 0 pending. | `0x01` |
+   | Before the clear | A new event sets bit 1 after the read. | `0x03` |
+   | Clear completion | W1C with `0x01` leaves bit 1 pending. W1C with `0xFFFFFFFF` clears both bits. | `0x02` with the saved mask, `0x00` with the all-ones mask |
+
+   The bit 1 event occurs before the clear edge. Set priority protects events sampled on the clear edge itself.
+
+2. **How long does interrupt service take?** In the project's Step 6 Icarus waveform, the button input rises at **4050 ns**, IRQ asserts at **4090 ns**, the status read completes at **4230 ns**, the W1C write completes at **4330 ns**, and `irq_count` increments at **4350 ns**. At 50 MHz this is **2 clocks** from the input transition to IRQ and **15 clocks** from the input transition to the counter increment. The first interval covers synchronization and edge-event capture for this stimulus alignment. The remaining **13 clocks** include completion of the in-flight LED write, sequencer handshakes, the APB status read and clear, and the counter update. The [Step 6 waveform illustration](evidence/step6-waveform.png) shows the same service sequence in Questa.
+3. **Why stretch IRQ for an LED?** The sequencer can clear IRQ in a fraction of a microsecond, which is too brief to see directly. The tutorial system stretches the indication with a configurable hold counter. The Step 6 test uses 50 clocks for simulation. A physical indicator needs a much longer hold time, or a latched completion indicator such as `LEDR[9]` in the DE10-Standard demo.
+
+### A.7 FPGA demonstration checklist
+
+The tutorial's board checklist applies to its switch-to-LED and interrupt-counter design. The DE10-Standard build uses the board interface and demo sequence in Section 6.
+
+| Tutorial check | DE10-Standard result |
+| --- | --- |
+| Reset and startup | Board-level simulation verifies that `KEY[0]` clears the outputs and the sequencer reaches its wait state with `0xAA` on the LEDs. Physical reset is unverified. The board register map has no `ID` register. |
+| Switches through APB | Board-level simulation verifies a `DATA_IN` capture of `0x000004A5`. The board LEDs show the programmed demo pattern. The tutorial Step 6 simulation verifies switch-to-LED forwarding. |
+| Button interrupt | The board test verifies that a debounced `KEY[1]` press captures `INT_STATUS=0x00000100`, clears IRQ and asserts completion. Figures 2–4 show the board LED indications. The tutorial Step 6 simulation separately checks a rising-edge count and no increment on release. |
+| Switch-edge interrupts and bounce | Tutorial Step 6 checks both edges on pin 0 and the falling edge on pin 1. The board demo configures GPIO8 as the interrupt source. Physical switch-bounce counts are unverified. |
+| SignalTap | The Step 6 simulation shows the status read and W1C sequence. The physical board has no recorded SignalTap capture. |
