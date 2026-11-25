@@ -1,14 +1,41 @@
 # Topic 1 — APB4 GPIO Controller
 
-This digital design midterm project implements a 32-bit GPIO peripheral with an AMBA APB4 slave interface. The Verilog core supports per-pin direction control, synchronized inputs, and configurable edge-triggered interrupts. A built-in APB master demonstrates the peripheral on the Terasic DE10-Standard FPGA board.
+Topic 1 implements an AMBA APB4 GPIO peripheral with synchronized inputs, per-pin direction control and configurable edge interrupts. The tutorial simulation includes a command-driven APB master and a GPIO demo sequencer. The DE10-Standard demo is documented in the Phase 5B sections below.
 
-## Architecture
+## Run the tutorial simulations
+
+The tutorial RTL and self-checking testbenches are in
+[`midterm_project/`](midterm_project/). The student templates are in [`docs/`](docs/). Run steps 1–6 from the repository root
+in Bash (Git Bash or WSL on Windows) with Icarus Verilog 12 on PATH.
+
+```bash
+bash midterm_project/sim/run_all.sh
+```
+
+The regression checks Step 4 with zero and two wait states and Step 5 with five
+seeds at each of zero, one, and two wait states. It writes coverage tables to
+`midterm_project/logs/` and VCD waveforms to `midterm_project/sim/`. With
+Verilator on PATH it also runs the SVA checker and the intentional BFM protocol
+violation. To run a single tutorial step:
+
+```bash
+bash midterm_project/sim/run_icarus.sh 4 -DWS=2
+```
+
+The tutorial peripheral defaults to 16 GPIO pins and accepts 0–15 wait states.
+Its interrupt registers are `INT_RISE` at `0x10`, `INT_FALL` at `0x14` and
+`INT_STATUS` at `0x18`. Its read-only `ID` register at `0x1C` defaults to
+`0x47504901`. The architecture, register map and board instructions below
+describe the existing DE10-Standard implementation for Phase 5B.
+
+
+## Phase 5B architecture
 
 - [`apb_gpio_top`](midterm_project/rtl/apb_gpio_top.v) integrates the APB address decoder, GPIO register bank, two-stage input synchronizer, and interrupt logic.
 - The APB slave completes transfers with zero wait states and uses `PSTRB` for byte writes. It asserts `PSLVERR` on unmapped addresses and writes to `DATA_IN`.
 - [`de10_standard_top`](midterm_project/rtl/de10_standard_top.v) maps the demo to the board clock, keys, switches, and LEDs. The demo wrapper synchronizes reset release and debounces the interrupt button.
 
-## Register map
+## Phase 5B register map
 
 Offsets are byte addresses relative to the peripheral base address. Each register is 32 bits wide.
 
@@ -24,7 +51,7 @@ Offsets are byte addresses relative to the peripheral base address. Each registe
 
 The interrupt logic records configured edges on pins set to input. Pending bits remain set until cleared or reset. `INT_ENABLE` gates the combined IRQ without affecting pending bit capture. The IRQ is the OR-reduction of `INT_STATUS & INT_ENABLE`.
 
-## Run the simulations
+## Run the DE10-Standard regression
 
 Install Python 3 and Icarus Verilog, with `iverilog` and `vvp` available on your PATH. From the repository root, run the full regression:
 
@@ -62,7 +89,8 @@ Set the switches and reset the design to start the demo. The APB master writes `
 | --- | --- |
 | [`midterm_project/rtl/`](midterm_project/rtl/) | Verilog core and demo wrappers |
 | [`midterm_project/tb/`](midterm_project/tb/) | SystemVerilog testbenches, APB bus functional model, and scoreboard |
-| [`midterm_project/scripts/`](midterm_project/scripts/) | Python simulation runners |
+| [`midterm_project/sim/`](midterm_project/sim/) | Tutorial step runners and regression |
+| [`midterm_project/scripts/`](midterm_project/scripts/) | Python simulation runners for the DE10-Standard implementation |
 | [`midterm_project/quartus/`](midterm_project/quartus/) | Quartus pin assignments and timing constraints |
 | [`midterm_project/docs/`](midterm_project/docs/) | Proposal, design plan, verification results, and board documentation |
 

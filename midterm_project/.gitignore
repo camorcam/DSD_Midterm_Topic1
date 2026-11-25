@@ -1,3 +1,12 @@
 /build/
 __pycache__/
 *.pyc
+/logs/
+/sim/*.vvp
+/sim/*.vcd
+/sim/build_*.log
+/sim/obj_*/
+/sim/work/
+/sim/core
+/sim/transcript
+/sim/vsim.wlf
